@@ -20,7 +20,7 @@ targets:
           - Dixerne.entitlements
     dependencies:
       - package: LocalLLMClient
-        product: LocalLLMClient
+        product: LocalLLMClientCore
       - package: LocalLLMClient
         product: LocalLLMClientLlama
     info:

@@ -1,5 +1,5 @@
 import SwiftUI
-import LocalLLMClient
+import LocalLLMClientCore
 
 struct MessageBubbleView: View {
     let message: LLMInput.Message

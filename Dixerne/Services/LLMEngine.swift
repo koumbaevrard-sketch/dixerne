@@ -1,5 +1,5 @@
 import Foundation
-import LocalLLMClient
+import LocalLLMClientCore
 import LocalLLMClientLlama
 
 /// Moteur d'inférence : gère le téléchargement, le chargement et l'exécution

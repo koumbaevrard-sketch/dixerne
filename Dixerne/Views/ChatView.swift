@@ -1,7 +1,7 @@
 import SwiftUI
 import PhotosUI
 import UIKit
-import LocalLLMClient
+import LocalLLMClientCore
 
 /// Écran principal : conversation + barre d'entrée (texte, dictée, photo, caméra).
 struct ChatView: View {

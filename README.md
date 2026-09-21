@@ -30,7 +30,7 @@ Dix est une jeune femme de 25 ans, africaine, qui parle un français parfait. Ca
 
 ## Stack technique
 
-- **Moteur** : [llama.cpp](https://github.com/ggml-org/llama.cpp) via le wrapper [LocalLLMClient](https://github.com/tattn/LocalLLMClient) (produit `LocalLLMClientLlama`), accélération Metal.
+- **Moteur** : [llama.cpp](https://github.com/ggml-org/llama.cpp) via le wrapper [LocalLLMClient](https://github.com/tattn/LocalLLMClient) (produits `LocalLLMClientCore` + `LocalLLMClientLlama`), accélération Metal.
 - **UI** : SwiftUI, `@Observable` (iOS 17+).
 - **Modèles** (GGUF quantifié, ≤ ~2,5 Go pour tenir dans 6 Go de RAM) :
   - Qwen 2.5 1.5B Instruct (par défaut, ~1 Go)

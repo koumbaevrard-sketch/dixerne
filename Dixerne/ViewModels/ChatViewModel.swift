@@ -1,6 +1,6 @@
 import Foundation
 import UIKit
-import LocalLLMClient
+import LocalLLMClientCore
 
 /// État observable de la conversation : relie l'UI au moteur LLM et aux services voix/vision.
 @Observable @MainActor
