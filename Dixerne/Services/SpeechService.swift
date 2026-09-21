@@ -19,8 +19,6 @@ final class SpeechService: NSObject {
         super.init()
         synthesizer.delegate = self
         recognizer = SFSpeechRecognizer(locale: Locale(identifier: "fr-FR"))
-        // Force le traitement on-device quand c'est possible (zéro cloud).
-        recognizer?.requiresOnDeviceRecognition = (recognizer?.supportsOnDeviceRecognition == true)
     }
 
     var isAvailable: Bool { recognizer != nil }
@@ -48,6 +46,8 @@ final class SpeechService: NSObject {
 
         let inputNode = audioEngine.inputNode
         recognitionRequest.shouldReportPartialResults = true
+        // Force le traitement on-device quand c'est possible (zéro cloud).
+        recognitionRequest.requiresOnDeviceRecognition = recognizer?.supportsOnDeviceRecognition == true
 
         recognitionTask = recognizer?.recognitionTask(with: recognitionRequest) { [weak self] result, error in
             guard let self else { return }
