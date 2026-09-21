@@ -194,7 +194,7 @@ private struct MessageList: View {
     let messages: [LLMInput.Message]
     var onSpeak: (String) -> Void
 
-    @State private var position = ScrollPosition(idType: LLMInput.Message.ID.self)
+    @State private var scrollID: LLMInput.Message.ID?
 
     var body: some View {
         ScrollView {
@@ -204,13 +204,12 @@ private struct MessageList: View {
                         .id(message.id)
                 }
             }
-            .scrollTargetLayout()
             .padding(.horizontal)
             .padding(.vertical, 8)
         }
-        .scrollPosition($position)
+        .scrollPosition(id: $scrollID)
         .onChange(of: messages) { _, _ in
-            position.scrollTo(edge: .bottom)
+            scrollID = messages.last?.id
         }
         .scrollDismissesKeyboard(.interactively)
     }
