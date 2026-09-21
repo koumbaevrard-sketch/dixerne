@@ -54,5 +54,5 @@ Le workflow `.github/workflows/build.yml` compile automatiquement (build non sig
 - **Vision = OCR**, pas d'analyse de scène type VLM (un modèle multimodal + mmproj est une évolution future ; nécessiterait plus de RAM).
 - **Voix** : la synthèse vocale on-device utilise les voix système d'Apple (voix féminine française privilégiée). Le timbre précis « rauque et sensuel » décrit dans la personnalité de Dix est porté par le *texte* ; une voix neuronale personnalisée à ce timbre n'est pas disponible en on-device gratuit — c'est une évolution future (voix neuronale locale type Piper, ou option cloud explicitement consentie).
 - **Latence** : sur A16 Bionic, un modèle 1.5B Q4 délivre typiquement **15–40 tokens/s** en Metal — fluide pour du chat ; le 3B est plus lent (~8–20 t/s) mais plus précis.
-- **Compilation** : nécessite **Xcode 16+ (macOS 14+)**. Le CI vérifie que le code compile ; l'installation sur l'iPhone se fait depuis un Mac (voir `INSTALLATION.md`).
+- **Compilation** : nécessite **Xcode 16+ (macOS 14+)**. Le CI vérifie que le code compile et produit une **`.ipa`** (artefact `Dixerne-ipa`) ; l'installation sur l'iPhone se fait via **AltStore** avec un Apple ID gratuit (voir `ALTSTORE.md`).
 - Le code est vérifié **statiquement** (cohérence d'API, structure) ; le build réel est validé par le CI macOS.
