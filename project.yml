@@ -47,6 +47,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dixerne.app
         SWIFT_VERSION: "5.9"
+        SWIFT_OBJC_INTEROP_MODE: objcxx
         SWIFT_STRICT_CONCURRENCY: minimal
         TARGETED_DEVICE_FAMILY: "1"
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
