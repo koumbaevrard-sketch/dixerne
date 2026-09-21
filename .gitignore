@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# Références de travail (pas dans le repo)
+.docs/
+
+# Xcode (généré par XcodeGen, à régénérer)
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+DerivedData/
+build/
+
+# SPM
+.swiftpm/
+.build/
+
+# Archives
+*.ipa
+*.dSYM.zip

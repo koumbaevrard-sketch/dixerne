@@ -1,0 +1,48 @@
+name: Build iOS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Resolve package dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project Dixerne.xcodeproj \
+            -scheme Dixerne
+
+      - name: Build (unsigned)
+        run: |
+          xcodebuild build \
+            -project Dixerne.xcodeproj \
+            -scheme Dixerne \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Upload build products
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dixerne-app
+          path: build/Build/Products/Debug-iphoneos/Dixerne.app
+          retention-days: 14
