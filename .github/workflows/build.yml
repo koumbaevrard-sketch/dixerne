@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 90
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -50,14 +50,14 @@ jobs:
           unzip -l Dixerne.ipa | grep -c "Payload/Dixerne.app/"
 
       - name: Upload IPA
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Dixerne-ipa
           path: Dixerne.ipa
           retention-days: 14
 
       - name: Upload build products
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Dixerne-app
           path: build/Build/Products/Debug-iphoneos/Dixerne.app
