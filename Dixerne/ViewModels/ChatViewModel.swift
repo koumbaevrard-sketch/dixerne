@@ -7,6 +7,7 @@ import LocalLLMClientCore
 final class ChatViewModel {
     private let engine: LLMEngine
     let speech: SpeechService
+    private let memory: MemoryStore
 
     var inputText = ""
     var lastError: String?
@@ -14,10 +15,16 @@ final class ChatViewModel {
     private var generateTask: Task<Void, Never>?
     private var generatingText = ""
     private var pendingUserMessage: String?
+    /// Historique chargé depuis le disque, à réinjecter après le chargement du modèle.
+    private var pendingHistory: [MemoryStore.StoredMessage]?
 
     init() {
         engine = LLMEngine()
         speech = SpeechService()
+        memory = MemoryStore.shared
+        engine.setFacts(memory.loadFacts())
+        let history = memory.loadHistory()
+        pendingHistory = history.isEmpty ? nil : history
         engine.resetMessages()
     }
 
@@ -47,6 +54,10 @@ final class ChatViewModel {
     func loadModel(_ model: AIModel) async {
         cancelGeneration()
         await engine.load(model)
+        if engine.isLoaded, let pendingHistory {
+            engine.restoreConversation(pendingHistory)
+            self.pendingHistory = nil
+        }
     }
 
     func selectPersona(_ persona: Persona) {
@@ -62,6 +73,7 @@ final class ChatViewModel {
         }
         inputText = ""
         lastError = nil
+        handleMemoryCommand(text)
         runGeneration(prompt: text, pending: text)
     }
 
@@ -92,6 +104,52 @@ final class ChatViewModel {
     func clearChat() {
         cancelGeneration()
         engine.resetMessages()
+        memory.clearHistory()
+    }
+
+    // MARK: - Mémoire à long terme
+
+    /// Détecte les commandes « retiens que … » / « oublie … » et met à jour la mémoire durable.
+    private func handleMemoryCommand(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lower = trimmed.lowercased()
+
+        let addPrefixes = [
+            "retiens que ", "souviens-toi que ", "rappelle-toi que ",
+            "mémorise que ", "memorise que ", "note que "
+        ]
+        for prefix in addPrefixes where lower.hasPrefix(prefix) {
+            let fact = String(trimmed.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !fact.isEmpty else { return }
+            var facts = engine.facts
+            if !facts.contains(where: { $0.caseInsensitiveCompare(fact) == .orderedSame }) {
+                facts.append(fact)
+                engine.setFacts(facts)
+                memory.saveFacts(facts)
+            }
+            return
+        }
+
+        let forgetPrefixes = [
+            "oublie ", "efface de ta mémoire ", "efface de ta memoire ",
+            "supprime de ta mémoire ", "supprime de ta memoire "
+        ]
+        for prefix in forgetPrefixes where lower.hasPrefix(prefix) {
+            let term = String(trimmed.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !term.isEmpty else { return }
+            var facts = engine.facts
+            let before = facts.count
+            if term == "tout" || term == "tous" {
+                facts.removeAll()
+            } else {
+                facts.removeAll { $0.lowercased().contains(term) }
+            }
+            if facts.count != before {
+                engine.setFacts(facts)
+                memory.saveFacts(facts)
+            }
+            return
+        }
     }
 
     // MARK: - Interne
@@ -111,6 +169,7 @@ final class ChatViewModel {
             pendingUserMessage = nil
             generatingText = ""
             generateTask = nil
+            memory.saveHistory(engine.snapshotHistory())
         }
     }
 }

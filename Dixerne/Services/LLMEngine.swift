@@ -14,6 +14,9 @@ final class LLMEngine {
 
     var persona: Persona = PersonaCatalog.default
 
+    /// Faits durables (mémoire à long terme) injectés dans le prompt système.
+    private(set) var facts: [String] = []
+
     private var session: LLMSession?
     private var loadTask: Task<Void, Never>?
 
@@ -23,22 +26,70 @@ final class LLMEngine {
         set { session?.messages = newValue }
     }
 
+    // MARK: - Prompt système (persona + mémoire durable)
+
+    /// Construit le prompt système : persona + bloc mémoire durable.
+    private func systemPrompt() -> String {
+        var prompt = persona.systemPrompt
+        if !facts.isEmpty {
+            prompt += "\n\nMÉMOIRE DURABLE — ce que tu sais de ton interlocuteur (informations stables, à utiliser naturellement quand c'est pertinent, sans les réciter ni dire que tu les as mémorisées) :\n"
+            prompt += facts.map { "- \($0)" }.joined(separator: "\n")
+        }
+        return prompt
+    }
+
+    /// Remplace le message système en tête de conversation sans effacer l'historique.
+    private func rebuildSystemPrompt() {
+        guard let session else { return }
+        var msgs = session.messages
+        if msgs.first?.role == .system {
+            msgs[0] = .system(systemPrompt())
+        } else {
+            msgs.insert(.system(systemPrompt()), at: 0)
+        }
+        session.messages = msgs
+    }
+
     func resetMessages() {
-        messages = [.system(persona.systemPrompt)]
+        messages = [.system(systemPrompt())]
     }
 
     /// Remplace le system prompt en tête de conversation sans effacer l'historique.
     func applyPersona(_ newPersona: Persona) {
         persona = newPersona
-        guard let session else { return }
-        var msgs = session.messages
-        if msgs.first?.role == .system {
-            msgs[0] = .system(newPersona.systemPrompt)
-        } else {
-            msgs.insert(.system(newPersona.systemPrompt), at: 0)
+        rebuildSystemPrompt()
+    }
+
+    /// Met à jour la mémoire durable et réinjecte le prompt système.
+    func setFacts(_ newFacts: [String]) {
+        facts = newFacts
+        rebuildSystemPrompt()
+    }
+
+    /// Restaure une conversation persistée dans la session courante.
+    func restoreConversation(_ stored: [MemoryStore.StoredMessage]) {
+        guard let session, !stored.isEmpty else { return }
+        var msgs: [LLMInput.Message] = [.system(systemPrompt())]
+        for m in stored {
+            switch m.role {
+            case "user": msgs.append(.user(m.content))
+            case "assistant": msgs.append(.assistant(m.content))
+            default: break
+            }
         }
         session.messages = msgs
     }
+
+    /// Photographie l'historique (sans le message système) pour persistance.
+    /// Borné aux 60 derniers messages pour rester dans la fenêtre de contexte.
+    func snapshotHistory() -> [MemoryStore.StoredMessage] {
+        let kept = messages.filter { $0.role != .system && $0.role != .tool }
+        return kept.suffix(60).map {
+            MemoryStore.StoredMessage(role: $0.role.rawValue, content: $0.content)
+        }
+    }
+
+    // MARK: - Chargement
 
     /// Télécharge (si besoin) puis charge le modèle en mémoire.
     func load(_ model: AIModel) async {
